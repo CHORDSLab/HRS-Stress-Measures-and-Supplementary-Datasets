@@ -4,7 +4,6 @@ subtitle: "CHORDS Lab – Washington State University"
 author:
 - "Jason Cross"
 - "Shawna Beese"
-- "David Rice"
 date: "Last updated: 2025-08-30"
 output: html_document
 ---
@@ -75,6 +74,7 @@ beale_columns <- c("BEALE2003_06", "BEALE2003_08", "BEALE2003_10", "BEALE2003_12
 region_trim <- region %>%
   select(unique_id, all_of(beale_columns))  # Ensure `unique_id` is included with the BEALE columns
 
+# Preview
 glimpse(region_trim)
 
 ```
