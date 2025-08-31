@@ -22,10 +22,14 @@ _Last updated: [2025-07-15]_
   An Excel workbook with three sheets:
   - `HRS_by_year`: Source HRS data organized by survey cycle/year
   - `HRS_by_vars`: Source HRS data organized by variable
-  - `HRS_final_dataset`: Full list of variables in the constructed dataset, including all derived variables from [`HRS_dataset_construction.Rmd`](HRS_dataset_construction.Rmd)  
-  >Useful for tracing each variable’s origin, understanding coding schemes, and reviewing how variables were cleaned or computed.
+  - `HRS_final_dataset`: Full list of variables in the constructed dataset, including all derived variables from [`HRS_dataset_construction.Rmd`](HRS_dataset_construction.Rmd)   
 
-  [<img src="images/hrs_data_dict.png" alt="preview of HRS data dictionary" width="50%" />](HRS_data_dictionary.xlsx)  
+- [`HRS_geo_subset/`](HRS_geo_subset/)  
+  Supplementary **geographic** dataset materials  
+
+- [`HRS_stress_subset/`](HRS_stress_subset/)  
+  Supplementary **stress** dataset materials
+
 
 ## Variable Naming Conventions  
 
