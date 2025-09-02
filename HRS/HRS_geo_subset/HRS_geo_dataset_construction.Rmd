@@ -33,13 +33,14 @@ The [`HRS_geo_access_guide.md`](HRS_geo_access_guide.md) will walk you through d
 ## Setup & Libraries
 
 ```{r install-packages, eval=FALSE}
-install.packages(c("SAScii", "dplyr", "stringr"))
+install.packages(c("SAScii", "dplyr", "stringr", "tidyr"))
 ```
 
 ```{r libraries}
 library(SAScii)
 library(dplyr)
 library(stringr)
+library(tidyr)
 ```
 
 ---
@@ -50,6 +51,7 @@ library(stringr)
 
 # Set to the location of your "HRS Data Products" folder
 path <- "../path_to_your_folder/HRS Data Products/" # Replace with the full path to your local "HRS Data Products" folder
+
 
 #####################
 # Append Regional Data
@@ -79,7 +81,10 @@ glimpse(region_trim)
 
 ```
 
+
 ```{r}
+
+library(tidyr)
 
 geo_subset <- region_trim %>%
   # Pivot both Beale schemes across years
@@ -103,7 +108,7 @@ geo_subset <- region_trim %>%
   # Build the id_year join key and select desired columns
   mutate(id_year = paste(unique_id, survey_year, sep = "_")) %>%
   select(id_year, unique_id, survey_year, Beale_2003, Beale_2013) %>%
-  arrange(unique_id, survey_year) %>%
+  arrange(unique_id, survey_year)
 
 # Preview
 glimpse(geo_subset)
