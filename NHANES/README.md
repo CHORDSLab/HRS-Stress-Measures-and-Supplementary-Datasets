@@ -41,6 +41,4 @@ All variables are harmonized across cycles. Raw NHANES variables were renamed as
 
 ## Final Dataset
 
-The screenshot below shows the final `nhanes_merged` dataset, as previewed in RStudio using the `glimpse()` function. This dataset is constructed in [`NHANES_dataset_construction.Rmd`](NHANES_dataset_construction.Rmd).
-
-<img src="images/glimpse_nhanes_merged.png" alt="glimpse of nhanes_merged dataset" width="100%" />
+*Removed 8/4/2025*
