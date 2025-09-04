@@ -23,6 +23,5 @@ All variables are harmonized across waves. Original HRS variable names were rena
 
 Below is a preview of the final HRS `full_hrs_stress` dataset, as shown using the `glimpse()` function in RStudio. This dataset is created in [`HRS_stress_dataset_construction.Rmd`](HRS_stress_dataset_construction.Rmd).
 
-<img src="../images/glimpse_stress.png" alt="glimpse of HRS stress subset" width="100%" />
 
 

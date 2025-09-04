@@ -50,4 +50,3 @@ All variables are harmonized across waves. Original HRS variable names were rena
 
 Below is a preview of the final HRS `full_trim` dataset, as shown using the `glimpse()` function in RStudio. This dataset is created in [`HRS_dataset_construction.Rmd`](HRS_dataset_construction.Rmd).
 
-<img src="images/glimpse_hrs_full.png" alt="glimpse of HRS dataset" width="100%" />
