@@ -1,0 +1,623 @@
+---
+title: "HRS Stress Dataset Construction"
+subtitle: "CHORDS Lab – Washington State University"
+author:
+- "Jason Cross"
+- "Shawna Beese"
+date: "Last updated: 2025-08-30"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+---
+
+## Overview
+
+This R Markdown script walks through the construction of a supplementary stress dataset for allostatic (over)load research using data from the Psychosocial and Lifestyle Questionnaire (2006–2022) of the [Health and Retirement Study (HRS)](https://hrs.isr.umich.edu/).
+
+⚠️ Before continuing, make sure you’ve downloaded and organized the required raw data. See [`HRS_stress_access_guide.md`](https://insert_url_here) for instructions.
+
+The [`HRS_stress_access_guide.md`](HRS_stress_access_guide.md) walks you through downloading the necessary datasets and arranging them in a folder structure compatible with this script.
+
+A user guide for the Psychosocial and Lifestyle Questionnaire (2006–2022) is available here: [HRS 2006–2022 SAQ User Guide (PDF)](https://hrs.isr.umich.edu/sites/default/files/biblio/HRS%202006-2022%20SAQ%20User%20Guide.pdf).
+
+---
+
+### What You’ll Need to Run This Script
+
+- Raw HRS data, organized as described in the guide
+- R environment with the following packages: `SAScii`, `dplyr`, `stringr`
+- Familiarity with HRS data formats and .sas scripts
+
+
+## Setup & Libraries
+
+```{r install-packages, eval=FALSE}
+install.packages(c("SAScii", "dplyr", "stringr"))
+```
+
+```{r libraries}
+library(SAScii)
+library(dplyr)
+library(stringr)
+```
+
+---
+
+## 📁 Set File Path
+
+```{r file-path}
+# Set to the location of your "HRS Data Products" folder
+path <- "C:/Users/jason/OneDrive/Desktop/CHORDS Lab/HRS/Psychosocial and Lifestyle Data/" # Replace with the full path to your local "HRS Data Products" folder
+```
+
+
+### Load HRS Core Data
+
+> **Note:** Loading the LB files for all waves (2006–2022) with **SAScii** reads large fixed-width files and can be slow. To speed reruns, enable chunk caching (`cache=TRUE`) or save the loaded objects with `saveRDS()` (and reload with `readRDS()`). **By default, chunk caching is enabled below.**
+
+```{r load_core, cache=TRUE, include=FALSE, message=FALSE, warning=FALSE}
+
+#####################
+# Load Core Data (LB) 2006–2022
+#####################
+
+# Set path to your "HRS Stress Data" folder
+setwd(file.path(path, "HRS Stress Data"))
+
+# Load LB (Leave-Behind Questionnaire) files for each wave; 2006-2022
+core_2006 <- read.SAScii("h06core/h06da/H06LB_R.da", "h06core/h06sas/H06LB_R.sas")
+core_2008 <- read.SAScii("h08core/h08da/H08LB_R.da", "h08core/h08sas/H08LB_R.sas")
+core_2010 <- read.SAScii("h10core/h10da/H10LB_R.da", "h10core/h10sas/H10LB_R.sas")
+core_2012 <- read.SAScii("h12core/h12da/H12LB_R.da", "h12core/h12sas/H12LB_R.sas")
+core_2014 <- read.SAScii("h14core/h14da/H14LB_R.da", "h14core/h14sas/H14LB_R.sas")
+core_2016 <- read.SAScii("h16core/h16da/H16LB_R.da", "h16core/h16sas/H16LB_R.sas")
+core_2018 <- read.SAScii("h18core/h18da/H18LB_R.da", "h18core/h18sas/H18LB_R.sas")
+core_2020 <- read.SAScii("h20core/h20da/H20LB_R.da", "h20core/h20sas/H20LB_R.sas")
+core_2022 <- read.SAScii("h22core/h22da/H22LB_R.da", "h22core/h22sas/H22LB_R.sas")
+
+```
+
+---
+
+### Select 2006 HRS Core (LB) Data
+
+```{r}
+
+#####################
+# Select 2006 HRS Core (LB) Data
+#####################
+
+# Add unique identifier (HHID + PN)
+add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
+core_2006 <- add_id(core_2006)
+
+clean_2006 <- core_2006 %>%
+  transmute(
+    unique_id,
+    survey_year = 2006L,
+    id_year = paste(unique_id, survey_year, sep = "_"),
+
+    # End-of-Month Financial Strain
+    eomfs   = KLB039B,
+
+    # Ongoing Chronic Stressors (A1–A8)
+    ocs_01  = KLB040A,
+    ocs_02  = KLB040B,
+    ocs_03  = KLB040C,
+    ocs_04  = KLB040D,
+    ocs_05  = KLB040E,
+    ocs_06  = KLB040F,
+    ocs_07  = KLB040G,
+    ocs_08  = KLB040H,
+
+    # Stressful Life Events (last 5 years) + year follow-ups
+    sle_01  = KLB038A,   # job loss
+    sle_02  = KLB038AY,  # job loss year
+    sle_03  = KLB038B,   # unemployed self
+    sle_04  = KLB038BY,  # unemployed self year
+    sle_05  = KLB038C,   # other unemployed
+    sle_06  = KLB038CY,  # other unemployed year
+    sle_07  = KLB038D,   # moved to worse residence
+    sle_08  = KLB038DY,  # moved year
+    sle_09  = KLB038E,   # robbed/burglarized
+    sle_10  = KLB038EY   # robbed/burglarized year
+    # Note: 2006 has no fraud items (sle_11 / sle_12)
+  )
+
+# Preview the cleaned 2006 data
+glimpse(clean_2006)
+
+```
+
+---
+
+### Select 2008 HRS Core (LB) Data
+
+```{r}
+
+#####################
+# Select 2008 HRS Core (LB) Data
+#####################
+
+# Add unique identifier (HHID + PN)
+add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
+core_2008 <- add_id(core_2008)
+
+clean_2008 <- core_2008 %>%
+  transmute(
+    unique_id,
+    survey_year = 2008L,
+    id_year = paste(unique_id, survey_year, sep = "_"),
+
+    # End-of-Month Financial Strain
+    eomfs   = LLB040,
+
+    # Stressful Life Events (last 5 years) + year follow-ups
+    sle_01  = LLB038A,
+    sle_02  = LLB038AY,
+    sle_03  = LLB038B,
+    sle_04  = LLB038BY,
+    sle_05  = LLB038C,
+    sle_06  = LLB038CY,
+    sle_07  = LLB038D,
+    sle_08  = LLB038DY,
+    sle_09  = LLB038E,
+    sle_10  = LLB038EY,
+    sle_11  = LLB038F,
+    sle_12  = LLB038FY
+  )
+
+# Preview the cleaned 2008 data
+glimpse(clean_2008)
+
+```
+
+---
+
+### Select 2010 HRS Core (LB) Data
+
+```{r}
+
+#####################
+# Select 2010 HRS Core (LB) Data
+#####################
+
+# Add unique identifier (HHID + PN)
+add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
+core_2010 <- add_id(core_2010)
+
+clean_2010 <- core_2010 %>%
+  transmute(
+    unique_id,
+    survey_year = 2010L,
+    id_year = paste(unique_id, survey_year, sep = "_"),
+
+    # End-of-Month Financial Strain
+    eomfs  = MLB040,
+
+    # Ongoing Chronic Stressors (A1–A8)
+    ocs_01 = MLB040A_A,
+    ocs_02 = MLB040A_B,
+    ocs_03 = MLB040A_C,
+    ocs_04 = MLB040A_D,
+    ocs_05 = MLB040A_E,
+    ocs_06 = MLB040A_F,
+    ocs_07 = MLB040A_G,
+    ocs_08 = MLB040A_H,
+
+    # Stressful Life Events (last 5 years) + year follow-ups
+    sle_01 = MLB038A,
+    sle_02 = MLB038AY,
+    sle_03 = MLB038B,
+    sle_04 = MLB038BY,
+    sle_05 = MLB038C,
+    sle_06 = MLB038CY,
+    sle_07 = MLB038D,
+    sle_08 = MLB038DY,
+    sle_09 = MLB038E,
+    sle_10 = MLB038EY,
+    sle_11 = MLB038F,
+    sle_12 = MLB038FY
+  )
+
+# Preview the cleaned 2010 data
+glimpse(clean_2010)
+
+```
+
+---
+
+### Select 2012 HRS Core (LB) Data
+
+```{r}
+
+#####################
+# Select 2012 HRS Core (LB) Data
+#####################
+
+# Add unique identifier (HHID + PN)
+add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
+core_2012 <- add_id(core_2012)
+
+clean_2012 <- core_2012 %>%
+  transmute(
+    unique_id,
+    survey_year = 2012L,
+    id_year = paste(unique_id, survey_year, sep = "_"),
+
+    # End-of-Month Financial Strain
+    eomfs  = NLB040,
+
+    # Ongoing Chronic Stressors (A1–A8)
+    ocs_01 = NLB040A_A,
+    ocs_02 = NLB040A_B,
+    ocs_03 = NLB040A_C,
+    ocs_04 = NLB040A_D,
+    ocs_05 = NLB040A_E,
+    ocs_06 = NLB040A_F,
+    ocs_07 = NLB040A_G,
+    ocs_08 = NLB040A_H,
+
+    # Stressful Life Events (last 5 years) + year follow-ups
+    sle_01 = NLB038A,
+    sle_02 = NLB038AY,
+    sle_03 = NLB038B,
+    sle_04 = NLB038BY,
+    sle_05 = NLB038C,
+    sle_06 = NLB038CY,
+    sle_07 = NLB038D,
+    sle_08 = NLB038DY,
+    sle_09 = NLB038E,
+    sle_10 = NLB038EY,
+    sle_11 = NLB038F,
+    sle_12 = NLB038FY
+  )
+
+# Preview the cleaned 2012 data
+glimpse(clean_2012)
+
+
+```
+
+---
+
+### Select 2014 HRS Core (LB) Data
+
+```{r}
+
+#####################
+# Select 2014 HRS Core (LB) Data
+#####################
+
+# Add unique identifier (HHID + PN)
+add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
+core_2014 <- add_id(core_2014)
+
+clean_2014 <- core_2014 %>%
+  transmute(
+    unique_id,
+    survey_year = 2014L,
+    id_year = paste(unique_id, survey_year, sep = "_"),
+
+    # End-of-Month Financial Strain
+    eomfs  = OLB035,
+
+    # Ongoing Chronic Stressors (A1–A8)
+    ocs_01 = OLB035A_1,
+    ocs_02 = OLB035A_2,
+    ocs_03 = OLB035A_3,
+    ocs_04 = OLB035A_4,
+    ocs_05 = OLB035A_5,
+    ocs_06 = OLB035A_6,
+    ocs_07 = OLB035A_7,
+    ocs_08 = OLB035A_8
+  )
+
+# Preview the cleaned 2014 data
+glimpse(clean_2014)
+
+
+```
+
+---
+
+### Select 2016 HRS Core (LB) Data
+
+```{r}
+
+#####################
+# Select 2016 HRS Core (LB) Data
+#####################
+
+# Add unique identifier (HHID + PN)
+add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
+core_2016 <- add_id(core_2016)
+
+clean_2016 <- core_2016 %>%
+  transmute(
+    unique_id,
+    survey_year = 2016L,
+    id_year = paste(unique_id, survey_year, sep = "_"),
+
+    # End-of-Month Financial Strain
+    eomfs  = PLB035,
+
+    # Ongoing Chronic Stressors (A1–A8)
+    ocs_01 = PLB035A_1,
+    ocs_02 = PLB035A_2,
+    ocs_03 = PLB035A_3,
+    ocs_04 = PLB035A_4,
+    ocs_05 = PLB035A_5,
+    ocs_06 = PLB035A_6,
+    ocs_07 = PLB035A_7,
+    ocs_08 = PLB035A_8
+  )
+
+# Preview the cleaned 2016 data
+glimpse(clean_2016)
+
+
+```
+
+---
+
+### Select 2018 HRS Core (LB) Data
+
+```{r}
+
+#####################
+# Select 2018 HRS Core (LB) Data
+#####################
+
+# Add unique identifier (HHID + PN)
+add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
+core_2018 <- add_id(core_2018)
+
+clean_2018 <- core_2018 %>%
+  transmute(
+    unique_id,
+    survey_year = 2018L,
+    id_year = paste(unique_id, survey_year, sep = "_"),
+
+    # End-of-Month Financial Strain
+    eomfs  = QLB035,
+
+    # Ongoing Chronic Stressors (A1–A8)
+    ocs_01 = QLB035A_1,
+    ocs_02 = QLB035A_2,
+    ocs_03 = QLB035A_3,
+    ocs_04 = QLB035A_4,
+    ocs_05 = QLB035A_5,
+    ocs_06 = QLB035A_6,
+    ocs_07 = QLB035A_7,
+    ocs_08 = QLB035A_8,
+
+    # Perceived Stress Scale (PSS-10)
+    # Reminder: 4,5,7,8 are usually reverse-scored
+    pss_01 = QLB035B1,
+    pss_02 = QLB035B2,
+    pss_03 = QLB035B3,
+    pss_04 = QLB035B4,  # reverse
+    pss_05 = QLB035B5,  # reverse
+    pss_06 = QLB035B6,
+    pss_07 = QLB035B7,  # reverse
+    pss_08 = QLB035B8,  # reverse
+    pss_09 = QLB035B9,
+    pss_10 = QLB035B10
+  )
+
+# Preview the cleaned 2018 data
+glimpse(clean_2018)
+
+
+```
+
+---
+
+### Select 2020 HRS Core (LB) Data
+
+```{r}
+
+#####################
+# Select 2020 HRS Core (LB) Data
+#####################
+
+# Add unique identifier (HHID + PN)
+add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
+core_2020 <- add_id(core_2020)
+
+clean_2020 <- core_2020 %>%
+  transmute(
+    unique_id,
+    survey_year = 2020L,
+    id_year = paste(unique_id, survey_year, sep = "_"),
+
+    # End-of-Month Financial Strain
+    eomfs   = RLB035,
+
+    # Ongoing Chronic Stressors (A1–A8)
+    ocs_01  = RLB035A1,
+    ocs_02  = RLB035A2,
+    ocs_03  = RLB035A3,
+    ocs_04  = RLB035A4,
+    ocs_05  = RLB035A5,
+    ocs_06  = RLB035A6,
+    ocs_07  = RLB035A7,
+    ocs_08  = RLB035A8,
+
+    # Perceived Stress Scale (PSS-10)
+    # Reminder: items 4,5,7,8 are usually reverse-scored
+    pss_01  = RLB035B1,
+    pss_02  = RLB035B2,
+    pss_03  = RLB035B3,
+    pss_04  = RLB035B4,  # reverse
+    pss_05  = RLB035B5,  # reverse
+    pss_06  = RLB035B6,
+    pss_07  = RLB035B7,  # reverse
+    pss_08  = RLB035B8,  # reverse
+    pss_09  = RLB035B9,
+    pss_10  = RLB035B10,
+
+    # Stressful Life Events (last 5 years)
+    sle_01  = RLB037B1,
+    sle_02  = RLB037B1A,
+    sle_03  = RLB037B2,
+    sle_04  = RLB037B2A,
+    sle_05  = RLB037B3,
+    sle_06  = RLB037B3A,
+    sle_07  = RLB037B4,
+    sle_08  = RLB037B4A,
+    sle_09  = RLB037B5,
+    sle_10  = RLB037B5A,
+    sle_11  = RLB037B6,
+    sle_12  = RLB037B6A,
+
+  )
+
+# Preview the cleaned 2020 data
+glimpse(clean_2020)
+
+
+```
+
+---
+
+### Select 2022 HRS Core (LB) Data
+
+```{r}
+
+#####################
+# Select 2022 HRS Core (LB) Data
+#####################
+
+# Add unique identifier (HHID + PN)
+add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
+core_2022 <- add_id(core_2022)
+
+clean_2022 <- core_2022 %>%
+  transmute(
+    unique_id,
+    survey_year = 2022L,
+    id_year = paste(unique_id, survey_year, sep = "_"),
+
+    # End-of-Month Financial Strain
+    eomfs  = SLB035,
+
+    # Ongoing Chronic Stressors (A1–A8)
+    ocs_01 = SLB035A1,
+    ocs_02 = SLB035A2,
+    ocs_03 = SLB035A3,
+    ocs_04 = SLB035A4,
+    ocs_05 = SLB035A5,
+    ocs_06 = SLB035A6,
+    ocs_07 = SLB035A7,
+    ocs_08 = SLB035A8,
+
+    # Perceived Stress Scale (PSS-10)
+    # Reminder: 4,5,7,8 are usually reverse-scored
+    pss_01 = SLB035B1,
+    pss_02 = SLB035B2,
+    pss_03 = SLB035B3,
+    pss_04 = SLB035B4,  # reverse
+    pss_05 = SLB035B5,  # reverse
+    pss_06 = SLB035B6,
+    pss_07 = SLB035B7,  # reverse
+    pss_08 = SLB035B8,  # reverse
+    pss_09 = SLB035B9,
+    pss_10 = SLB035B10,
+
+    # Stressful Life Events (last 5 years)
+    sle_01 = SLB037B1,
+    sle_02 = SLB037B1A,
+    sle_03 = SLB037B2,
+    sle_04 = SLB037B2A,
+    sle_05 = SLB037B3,
+    sle_06 = SLB037B3A,
+    sle_07 = SLB037B4,
+    sle_08 = SLB037B4A,
+    sle_09 = SLB037B5,
+    sle_10 = SLB037B5A,
+    sle_11 = SLB037B6,
+    sle_12 = SLB037B6A,
+    
+  )
+
+# Preview the cleaned 2022 data
+glimpse(clean_2022)
+
+
+```
+
+
+### Combine 2006-2022 HRS Core (LB) Data
+
+```{r}
+
+library(dplyr)
+
+# Collect all cleaned waves
+clean_list <- list(
+  clean_2006, clean_2008, clean_2010, clean_2012, clean_2014,
+  clean_2016, clean_2018, clean_2020, clean_2022
+)
+
+# Join all years by stacking (fills missing cols with NA automatically)
+full_hrs_stress <- bind_rows(clean_list) %>%
+  arrange(id_year) %>%
+  relocate(id_year, .before = 1) # move id_year to first column
+
+# Preview the full data
+glimpse(full_hrs_stress)
+
+```
+
+
+---
+
+### Save and Export 2006-2022 HRS Core (LB) Data
+
+
+Export the cleaned dataset for future use in your preferred format. Below are examples using both `write.csv()` and `saveRDS()`: 
+
+```{r}
+
+# write.csv(full_hrs_stress, "name_your_hrs_stress_dataset.csv")
+# Example: write.csv(full_hrs_stress, "hrs_stress_data.csv")
+
+# saveRDS(full_hrs_stress, "name_your_hrs_stress_dataset.rds")
+# Example: saveRDS(full_hrs_stress, "hrs_stress_data.rds")
+
+```
+
+
+---
+
+### Optional: Merge your HRS Stress dataset with your main HRS Allostatic (over)Load dataset
+
+If you have already built the HRS Allostatic (over)Load dataset (from HRS/HRS_dataset_construction.Rmd), you can join it with full_hrs_stress on the common key `id_year`.
+
+```{r}
+
+# Load your Allostatic (over)Load dataset
+# (use the matching format you saved earlier)
+# hrs_al <- readRDS("hrs_allostatic_overload.rds")
+# hrs_al <- read.csv("hrs_allostatic_overload.csv")
+
+# Join stress data with Allostatic (over)Load data on id_year
+hrs_merged <- full_hrs_stress %>%
+  left_join(hrs_al, by = "id_year")
+
+# Preview merged dataset
+glimpse(hrs_merged)
+
+# Save/export merged dataset
+# write.csv(hrs_merged, "hrs_allostatic_plus_stress.csv", row.names = FALSE)
+# saveRDS(hrs_merged, "hrs_allostatic_plus_stress.rds")
+
+```
+

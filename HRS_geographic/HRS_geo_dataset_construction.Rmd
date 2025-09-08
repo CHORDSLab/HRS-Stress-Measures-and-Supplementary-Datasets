@@ -1,0 +1,160 @@
+---
+title: "HRS Geographical Dataset Construction"
+subtitle: "CHORDS Lab – Washington State University"
+author:
+- "Jason Cross"
+- "Shawna Beese"
+date: "Last updated: 2025-08-30"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+---
+
+## Overview
+
+This R Markdown script walks through the construction of a supplementary geographic dataset for allostatic (over)load research using data from the [Health and Retirement Study (HRS)](https://hrs.isr.umich.edu/).
+
+⚠️ Before continuing, make sure you’ve downloaded and the required raw data. See [`HRS_geo_access_guide.md`](https://insert_url_here) for instructions.
+
+The [`HRS_geo_access_guide.md`](HRS_geo_access_guide.md) will walk you through downloading the data we will be pulling from in this script.
+---
+
+### What You’ll Need to Run This Script
+
+- The unzipped folder `HRSXRegion2022v10Early/` (contains `HRSXREGION22.da` and `HRSXREGION22.sas`)
+- R packages: SAScii, dplyr, stringr
+- A target folder path to your `HRS Data Products` directory
+
+## Setup & Libraries
+
+```{r install-packages, eval=FALSE}
+install.packages(c("SAScii", "dplyr", "stringr", "tidyr"))
+```
+
+```{r libraries}
+library(SAScii)
+library(dplyr)
+library(stringr)
+library(tidyr)
+```
+
+---
+
+## 📁 Set File Path
+
+```{r}
+
+# Set to the location of your "HRS Data Products" folder
+path <- "../path_to_your_folder/HRS Data Products/" # Replace with the full path to your local "HRS Data Products" folder
+
+
+#####################
+# Append Regional Data
+#####################
+
+# Set path to 2022 HRSXRegion folder
+setwd(file.path(path, "HRSXRegion2022v10Early"))
+
+region = read.SAScii("HRSXREGION22.da", "HRSXREGION22.sas")
+
+full_data$HHID = unlist(lapply(full_data$unique_id,FUN = function(x){return(str_split_1(x[1],"_")[1])}))
+region = region%>%mutate(unique_id = paste(HHID,PN,sep = "_"))
+
+```
+
+```{r}
+
+# Select the required BEALE columns for 2003 and 2013 (from 2006-2022) -- include 2018, 2020 and 2022?
+beale_columns <- c("BEALE2003_06", "BEALE2003_08", "BEALE2003_10", "BEALE2003_12", "BEALE2003_14", "BEALE2003_16", "BEALE2003_18", "BEALE2003_20", "BEALE2003_22",
+                   "BEALE2013_06", "BEALE2013_08", "BEALE2013_10", "BEALE2013_12", "BEALE2013_14", "BEALE2013_16", "BEALE2013_18", "BEALE2013_20", "BEALE2013_22")
+
+region_trim <- region %>%
+  select(unique_id, all_of(beale_columns))  # Ensure `unique_id` is included with the BEALE columns
+
+# Preview
+glimpse(region_trim)
+
+```
+
+
+```{r}
+
+library(tidyr)
+
+geo_subset <- region_trim %>%
+  # Pivot both Beale schemes across years
+  pivot_longer(
+    cols = matches("^BEALE(2003|2013)_(06|08|10|12|14|16|18|20|22)$"),
+    names_to = c("scheme", "yr2"),
+    names_pattern = "BEALE(2003|2013)_(\\d{2})",
+    values_to = "value"
+  ) %>%
+  # Generate year names
+  mutate(
+    survey_year = 2000 + as.integer(yr2),         # 06 -> 2006, 22 -> 2022
+    scheme = paste0("Beale_", scheme)
+  ) %>%
+  select(unique_id, survey_year, scheme, value) %>%
+  # Pivot to get Beale_2003 and Beale_2013 columns side by side
+  pivot_wider(
+    names_from = scheme,
+    values_from = value
+  ) %>%
+  # Build the id_year join key and select desired columns
+  mutate(id_year = paste(unique_id, survey_year, sep = "_")) %>%
+  select(id_year, unique_id, survey_year, Beale_2003, Beale_2013) %>%
+  arrange(unique_id, survey_year)
+
+# Preview
+glimpse(geo_subset)
+
+```
+
+---
+
+### Save and Export 2006-2022 HRS Geographic Data
+
+Export the cleaned dataset for future use in your preferred format. Below are examples using both `write.csv()` and `saveRDS()`: 
+
+```{r}
+
+# write.csv(geo_subset, "name_your_hrs_geo_dataset.csv")
+# Example: write.csv(geo_subset, "hrs_geo_data.csv")
+
+# saveRDS(geo_subset, "name_your_hrs_geo_dataset.rds")
+# Example: saveRDS(geo_subset, "hrs_geo_data.rds")
+
+```
+
+
+---
+
+### Optional: Merge your HRS Geographic dataset with your main HRS Allostatic (over)Load dataset
+
+If you have already built the HRS Allostatic (over)Load dataset (from HRS/HRS_dataset_construction.Rmd), you can join it with geo_subset on the common key `id_year`.
+
+```{r}
+
+# Load your Allostatic (over)Load dataset
+# (use the matching format you saved earlier)
+# hrs_al <- readRDS("hrs_allostatic_overload.rds")
+# hrs_al <- read.csv("hrs_allostatic_overload.csv")
+
+# Join geo data with Allostatic (over)Load data on id_year
+hrs_merged <- geo_subset %>%
+  left_join(hrs_al, by = "id_year")
+
+# Preview merged dataset
+glimpse(hrs_merged)
+
+# Save/export merged dataset
+# write.csv(hrs_merged, "hrs_allostatic_plus_geo.csv", row.names = FALSE)
+# saveRDS(hrs_merged, "hrs_allostatic_plus_geo.rds")
+
+```
+
