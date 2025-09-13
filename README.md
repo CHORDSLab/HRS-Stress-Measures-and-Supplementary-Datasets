@@ -47,7 +47,12 @@ These supplementary datasets (stress, geographic) are aligned to join with the a
 ---
 
 ## Usage
-**When using this protocol, workflow, or any portion of this repository, please cite:**  
+If you use these supplementary datasets, guides, or any portion of this repository in your work, please cite the repository directly:
+
+**CHORDS Lab.** (2025). *HRS Stress Measures and Supplementary Datasets.*  
+https://github.com/CHORDSLab/HRS-Stress-Measures-and-Supplementary-Datasets  
+
+For details on the underlying protocol for calculating allostatic (over)load and constructing the primary dataset, please also cite:  
 Beese S, Cross J, Rice D, & DeJong TL (2025). *Allostatic (over)Load Measurement: Workflow and repository.* https://doi.org/10.1101/2025.07.31.25332519
 
 ---
