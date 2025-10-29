@@ -21,9 +21,27 @@ This R Markdown script builds the HRS Stress Dataset for allostatic (over)load r
 
 ⚠️ Before continuing, ensure your data are downloaded and organized as described in [`HRS_stress_access_guide.md`](https://github.com/CHORDSLab/HRS-Stress-Measures-and-Supplementary-Datasets/blob/main/HRS_stress/HRS_stress_access_guide.md).  
 
-For a full overview of variables, see [`HRS_Stress_Data_Overview.pdf`](https://github.com/CHORDSLab/HRS-Stress-Measures-and-Supplementary-Datasets/blob/main/HRS_stress/HRS_Stress_Data_Overview.pdf).  
+For a full overview of variables, see [`HRS_stress_data_overview.pdf`](https://github.com/CHORDSLab/HRS-Stress-Measures-and-Supplementary-Datasets/blob/main/HRS_stress/HRS_stress_data_overview.pdf).  
 
 A user guide for the Psychosocial and Lifestyle Questionnaire (2006–2022) is available here: [HRS 2006–2022 SAQ User Guide (PDF)](https://hrs.isr.umich.edu/sites/default/files/biblio/HRS%202006-2022%20SAQ%20User%20Guide.pdf).  
+
+
+---
+
+## 🚨 **IMPORTANT: Set Your Local File Path Before Running Anything**
+
+Before running any code chunks below, you must tell R where your local **“HRS Data Products”** folder is located.  
+If this path is incorrect, none of the data files will load.
+
+> **Tip:** You can find your folder path by right-clicking the folder in your file explorer (Windows or Mac) and selecting **Copy path**.
+
+```{r file-path}
+#####################
+# ⚠️ EDIT THIS LINE
+# Replace the path below with the full path to your local "HRS Data Products" folder
+#####################
+path <- "C:/Users/YourName/Documents/HRS Data Products/HRS Core Data"
+```
 
 
 ---
@@ -87,16 +105,6 @@ library(stringr)
 
 ---
 
-## 📁 Set File Path  
-
-```{r file-path}
-# Set to the location of your "HRS Data Products" folder
-path <- "../path_to_your_folder/HRS Data Products/HRS Core Data" # Replace with the full path to your local "HRS Data Products" folder
-```
-
-
-
----
 
 ### Load and clean 2006 HRS Core (LB) data *(run for 2006 builds or longitudinal builds)*
 

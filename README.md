@@ -3,7 +3,12 @@
 # CHORDSLab / HRS-Stress-Measures-and-Supplementary-Datasets
 >[labs.wsu.edu/chords](https://labs.wsu.edu/chords/)
 
-_Last updated: September 8, 2025_
+_Last updated: October 29, 2025_
+
+Thank you for exploring our HRS Stress Measures repository!  
+If you have questions, spot an issue, or would like to share feedback, please reach out to us at:  
+>**[Extension.CHORDSLab@wsu.edu](mailto:Extension.CHORDSLab@wsu.edu)**  
+
 
 This repository contains guides and R scripts for generating analysis-ready datasets from the **Health and Retirement Study (HRS)**—including **longitudinal stress measures** and a **geographic subset** (Beale 2003/2013). Outputs are standardized to person-year and designed to join seamlessly with our [HRS Allostatic (over)Load dataset](https://github.com/CHORDSLab/Allostatic-over-Load-Repository/tree/main/HRS) via the key `id_year`.
 

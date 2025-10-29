@@ -7,7 +7,7 @@ _Last updated: [2025-10-29]_
 
 ## 🔗 Related Document
 
-For detailed variable descriptions, naming conventions, and background on the stress measures used in this dataset, see the [`HRS Stress Data Overview`](HRS_Stress_Data_Overview_DRAFT.pdf).
+For detailed variable descriptions, naming conventions, and background on the stress measures used in this dataset, see the [`HRS Stress Data Overview`](HRS_stress_data_overview.pdf).  
 
 ---
 

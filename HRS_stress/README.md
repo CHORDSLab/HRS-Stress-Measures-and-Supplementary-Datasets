@@ -11,7 +11,7 @@ _Last updated: [2025-10-29]_
 - [`HRS_stress_dataset_construction.Rmd`](HRS_dataset_construction.Rmd)  
   R Markdown script that compiles and processes HRS stress data across multiple waves (2006–2022). The resulting supplementary stress dataset may be joined with the HRS Allostatic (over)Load dataset built in `HRS_dataset_construction.Rmd`, using the common key `id_year`.  
 
-- [`HRS_Stress_Data_Overview.pdf`](HRS_Stress_Data_Overview.pdf)  
+- [`HRS_stress_data_overview.pdf`](HRS_stress_data_overview.pdf)  
   A summary document describing the origins, variables, and structure of the HRS Stress Dataset.  
   Includes:  
   - Background on the Health and Retirement Study and the Leave-Behind Psychosocial Questionnaire (LBQ)
