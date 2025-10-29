@@ -3,15 +3,28 @@
 # HRS Stress Measures Data Access Guide  
 *CHORDS Lab – Washington State University*
 
-_Last updated: [2025-08-30]_
+_Last updated: [2025-10-29]_
 
-This guide walks through the process of downloading and organizing the raw HRS stress data needed to run `HRS_stress_dataset_construction.Rmd` and build a longitudinal stress measures dataset for allostatic (over)load research using data from the [Health and Retirement Study (HRS)](https://hrs.isr.umich.edu/).
+## 🔗 Related Document
+
+For detailed variable descriptions, naming conventions, and background on the stress measures used in this dataset, see the [`HRS Stress Data Overview`](HRS_Stress_Data_Overview_DRAFT.pdf).
 
 ---
 
-## 📁 Final Folder Structure (Preview)
+This guide walks through the process of downloading and organizing the raw **Health and Retirement Study (HRS)** stress data needed to run [`HRS_stress_dataset_construction.Rmd`](HRS_stress_dataset_construction.Rmd) and build the **HRS Stress Dataset**.
 
-Once you've downloaded and extracted the required files, your local directory should resemble the following:
+You can build the dataset in one of two ways:  
+
+1. **Single-Year Build (custom)** – constructs the dataset for a single survey wave (e.g., 2016 only).  
+2. **Longitudinal Build (2006 – 2022)** – combines multiple HRS waves into a single harmonized dataset.  
+
+> Note: Both builds use the same folder structure and source data files. The only difference is **which year subfolders you download** and **which chunks you run** in the R Markdown script.
+
+---
+
+## 📁 Folder Structure & Required Files
+
+Once you’ve downloaded and extracted the required files, your local directory should look like this:
 
     HRS Data Products/  
     ├── HRS Core Data/  
@@ -25,8 +38,21 @@ Once you've downloaded and extracted the required files, your local directory sh
     │ └── h20core/
     │ └── h22core/
       
+> ### 💡 For a single-year build, you'll only need the subfolder for your selected wave (e.g., h16core/ for 2016). For a longitudinal build, download all waves you intend to include.  
 
 ---
+
+### Table 1. HRS Stress Measures by Category and Survey Year
+
+<img src="images/hrs_stress_tbl.png" alt="HRS Stress Table" width="80%"/> 
+
+> *Note:* The *CHORDS Variable ID* column lists CHORDS Lab’s standardized variable names for each survey item, used to harmonize measures across waves. Cells containing a grayed-out “X” indicate that the item was **not collected** in that survey year.
+
+<br>
+
+---
+
+# Accessing the HRS Data
 
 ## 1. Account Setup & Data Access Permissions
 
@@ -39,26 +65,29 @@ Before downloading, you'll need to:
 
 ## 2. Download HRS Core Data
 
-Visit the [HRS Public Survey Data](https://hrsdata.isr.umich.edu/data-products/public-survey-data) page and download the **Core Distribution Sets** for years 2006-2022.
+Visit the [HRS Public Survey Data](https://hrsdata.isr.umich.edu/data-products/public-survey-data) page and download the **Core Distribution Sets** corresponding to the year(s) you plan to include.
+
+- **Longitudinal build:** Download all waves (2006 – 2022).
+- **Single-year build:** Download only your target year.
 
 <img src="images/step02a_core_data.png" alt="Download HRS Core Data - 2a" width="80%"/>  
 
 <br>
 
 
-Click the **HRS Core** link for each year (2006-2022).
+Click the **HRS Core** link for each year you plan to include.
 
 <img src="images/step02b_core_data.png" alt="Download HRS Core Data - 2b" width="80%"/>   
 
 <br>
 
 
-Download the **Distribution Set** for each year (2006-2022).
+Download the **Distribution Set** for each year you plan to include.
 
 <img src="images/step02c_core_data.png" alt="Download HRS Core Data - 2c" width="80%"/>  
 
 
-#### Alternatively, you may use the following direct links to download each `HRS Core` distribution set:
+#### Alternatively, you may use the following direct links to download each `HRS Core` distribution set you plan to include:
 - [2006 HRS Core](https://hrsdata.isr.umich.edu/data-file-download/9482)
 - [2008 HRS Core](https://hrsdata.isr.umich.edu/data-file-download/5435)
 - [2010 HRS Core](https://hrsdata.isr.umich.edu/data-file-download/9465)
@@ -71,7 +100,7 @@ Download the **Distribution Set** for each year (2006-2022).
 
 ---
 
-### Unzipping HRS Core Data
+## 3. Unzipping HRS Core Data
 
 **Setup Instructions:**
 - Create a folder called `HRS Core Data/`
@@ -82,9 +111,11 @@ Download the **Distribution Set** for each year (2006-2022).
 
 ---
 
+
 ## ✅ Setup Complete -- Proceed to Stress Dataset Construction
 
-Once your data is downloaded and organized, run the [`HRS_stress_dataset_construction.Rmd`](HRS_stress_dataset_construction.Rmd) script in `HRS_stress_measures/`. This will generate the longitudinal stress measures dataset.
+Once your data are downloaded and organized, you can build the dataset using:
+- [`HRS_stress_dataset_construction.Rmd`](HRS_stress_dataset_construction.Rmd)
 
 If you encounter issues or need assistance with data access or permissions, contact the [HRS Help Desk](https://hrs.isr.umich.edu/help).
 

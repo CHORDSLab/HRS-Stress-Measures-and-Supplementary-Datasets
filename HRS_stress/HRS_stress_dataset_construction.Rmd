@@ -4,7 +4,7 @@ subtitle: "CHORDS Lab – Washington State University"
 author:
 - "Jason Cross"
 - "Shawna Beese"
-date: "Last updated: 2025-08-30"
+date: "Last updated: 2025-10-29"
 output: html_document
 ---
 
@@ -17,24 +17,63 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Overview
 
-This R Markdown script walks through the construction of a supplementary stress dataset for allostatic (over)load research using data from the Psychosocial and Lifestyle Questionnaire (2006–2022) of the [Health and Retirement Study (HRS)](https://hrs.isr.umich.edu/).
+This R Markdown script builds the HRS Stress Dataset for allostatic (over)load research using self-reported stress measures from the [Health and Retirement Study (HRS)](https://hrs.isr.umich.edu/).  
 
-⚠️ Before continuing, make sure you’ve downloaded and organized the required raw data. See [`HRS_stress_access_guide.md`](https://insert_url_here) for instructions.
+⚠️ Before continuing, ensure your data are downloaded and organized as described in [`HRS_stress_access_guide.md`](https://github.com/CHORDSLab/HRS-Stress-Measures-and-Supplementary-Datasets/blob/main/HRS_stress/HRS_stress_access_guide.md).  
 
-The [`HRS_stress_access_guide.md`](HRS_stress_access_guide.md) walks you through downloading the necessary datasets and arranging them in a folder structure compatible with this script.
+For a full overview of variables, see [`HRS_Stress_Data_Overview.pdf`](https://github.com/CHORDSLab/HRS-Stress-Measures-and-Supplementary-Datasets/blob/main/HRS_stress/HRS_Stress_Data_Overview.pdf).  
 
-A user guide for the Psychosocial and Lifestyle Questionnaire (2006–2022) is available here: [HRS 2006–2022 SAQ User Guide (PDF)](https://hrs.isr.umich.edu/sites/default/files/biblio/HRS%202006-2022%20SAQ%20User%20Guide.pdf).
+A user guide for the Psychosocial and Lifestyle Questionnaire (2006–2022) is available here: [HRS 2006–2022 SAQ User Guide (PDF)](https://hrs.isr.umich.edu/sites/default/files/biblio/HRS%202006-2022%20SAQ%20User%20Guide.pdf).  
+
 
 ---
 
-### What You’ll Need to Run This Script
+## Build Modes (Read Me First)  
 
-- Raw HRS data, organized as described in the guide
-- R environment with the following packages: `SAScii`, `dplyr`, `stringr`
-- Familiarity with HRS data formats and .sas scripts
+There are two ways to use this script, depending on whether you want to build a **single-year** or **longitudinal** version of the HRS Stress dataset.  
+
+---
+
+### Option A. Single-Year Build  
+Use this mode if you only downloaded **one** HRS Core wave (e.g., 2016).  
+
+**Steps:**  
+1. Run the following chunks:  
+   - `Setup & Libraries`  
+   - `Set File Path`  
+   - the `Load and clean [YEAR]` chunk for your chosen year    
+2. (Optional) Run the “Save [YEAR]-only dataset” chunk right below it.    
+3. Stop here — you do **not** need to combine other years.  
+
+💡 *Example:* If you downloaded only the 2016 Core data, scroll down to the “Load and clean 2016” section and run those chunks.  
+
+---
+
+### Option B. Longitudinal Build (2006–2022)  
+Use this mode if you downloaded **all HRS Core waves** from 2006–2022.  
+
+**Steps:**  
+1. Run every chunk in order, from top to bottom:  
+   - `Setup & Libraries`  
+   - `Step 1. Set File Path`  
+   - all `Step 2. Load and clean [YEAR]` chunks (2006–2022)  
+   - `Step 3. Combine All Years (Longitudinal Build Only)`  
+   - `Step 4. Save and Export Longitudinal Dataset`  
+2. This will create a single combined dataset named `full_hrs_stress`.  
+
+💡 *Partial build:* You can also build a smaller panel (e.g., 2014–2022) by running only the chunks for those specific years, then running the combine step.  
 
 
-## Setup & Libraries
+---
+
+### What You’ll Need to Run This Script  
+
+- Raw HRS data, organized as described in the guide  
+- R environment with the following packages: `SAScii`, `dplyr`, `stringr`  
+- Familiarity with HRS data formats and .sas scripts  
+
+
+## Setup & Libraries  
 
 ```{r install-packages, eval=FALSE}
 install.packages(c("SAScii", "dplyr", "stringr"))
@@ -48,49 +87,34 @@ library(stringr)
 
 ---
 
-## 📁 Set File Path
+## 📁 Set File Path  
 
 ```{r file-path}
 # Set to the location of your "HRS Data Products" folder
-path <- "C:/Users/jason/OneDrive/Desktop/CHORDS Lab/HRS/Psychosocial and Lifestyle Data/" # Replace with the full path to your local "HRS Data Products" folder
+path <- "../path_to_your_folder/HRS Data Products/HRS Core Data" # Replace with the full path to your local "HRS Data Products" folder
 ```
 
 
-### Load HRS Core Data
-
-> **Note:** Loading the LB files for all waves (2006–2022) with **SAScii** reads large fixed-width files and can be slow. To speed reruns, enable chunk caching (`cache=TRUE`) or save the loaded objects with `saveRDS()` (and reload with `readRDS()`). **By default, chunk caching is enabled below.**
-
-```{r load_core, cache=TRUE, include=FALSE, message=FALSE, warning=FALSE}
-
-#####################
-# Load Core Data (LB) 2006–2022
-#####################
-
-# Set path to your "HRS Stress Data" folder
-setwd(file.path(path, "HRS Stress Data"))
-
-# Load LB (Leave-Behind Questionnaire) files for each wave; 2006-2022
-core_2006 <- read.SAScii("h06core/h06da/H06LB_R.da", "h06core/h06sas/H06LB_R.sas")
-core_2008 <- read.SAScii("h08core/h08da/H08LB_R.da", "h08core/h08sas/H08LB_R.sas")
-core_2010 <- read.SAScii("h10core/h10da/H10LB_R.da", "h10core/h10sas/H10LB_R.sas")
-core_2012 <- read.SAScii("h12core/h12da/H12LB_R.da", "h12core/h12sas/H12LB_R.sas")
-core_2014 <- read.SAScii("h14core/h14da/H14LB_R.da", "h14core/h14sas/H14LB_R.sas")
-core_2016 <- read.SAScii("h16core/h16da/H16LB_R.da", "h16core/h16sas/H16LB_R.sas")
-core_2018 <- read.SAScii("h18core/h18da/H18LB_R.da", "h18core/h18sas/H18LB_R.sas")
-core_2020 <- read.SAScii("h20core/h20da/H20LB_R.da", "h20core/h20sas/H20LB_R.sas")
-core_2022 <- read.SAScii("h22core/h22da/H22LB_R.da", "h22core/h22sas/H22LB_R.sas")
-
-```
 
 ---
 
-### Select 2006 HRS Core (LB) Data
+### Load and clean 2006 HRS Core (LB) data *(run for 2006 builds or longitudinal builds)*
 
 ```{r}
 
 #####################
-# Select 2006 HRS Core (LB) Data
+# Load and clean 2006 HRS Core (LBQ) data
+# Run this chunk if you need 2006 (either single-year OR longitudinal)
 #####################
+
+# Navigate to the HRS Core Data folder
+setwd(file.path(path, "h06core"))
+
+# Load 2006 Leave-Behind Questionnaire (LBQ)
+core_2006 <- read.SAScii(
+  "h06da/H06LB_R.da",
+  "h06sas/H06LB_R.sas"
+)
 
 # Add unique identifier (HHID + PN)
 add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
@@ -134,15 +158,37 @@ glimpse(clean_2006)
 
 ```
 
+### Optional: Save 2006-only dataset
+
+```{r}
+# Run this if you're only building 2006 and not doing longitudinal
+
+write.csv(clean_2006, "HRS_Stress_2006.csv", row.names = FALSE)
+saveRDS(clean_2006, "HRS_Stress_2006.rds")
+
+```
+
+
+
 ---
 
-### Select 2008 HRS Core (LB) Data
+### Load and clean 2008 HRS Core (LB) data *(run for 2008 builds or longitudinal builds)*
 
 ```{r}
 
 #####################
-# Select 2008 HRS Core (LB) Data
+# Load and clean 2008 HRS Core (LBQ) data
+# Run this chunk if you need 2008 (either single-year OR longitudinal)
 #####################
+
+# Navigate to the HRS Core Data folder
+setwd(file.path(path, "h08core"))
+
+# Load 2008 Leave-Behind Questionnaire (LBQ)
+core_2008 <- read.SAScii(
+  "h08da/H08LB_R.da",
+  "h08sas/H08LB_R.sas"
+)
 
 # Add unique identifier (HHID + PN)
 add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
@@ -177,15 +223,37 @@ glimpse(clean_2008)
 
 ```
 
+### Optional: Save 2008-only dataset
+
+```{r}
+# Run this if you're only building 2008 and not doing longitudinal
+
+write.csv(clean_2008, "HRS_Stress_2008.csv", row.names = FALSE)
+saveRDS(clean_2008, "HRS_Stress_2008.rds")
+
+```
+
+
+
 ---
 
-### Select 2010 HRS Core (LB) Data
+### Load and clean 2010 HRS Core (LB) data *(run for 2010 builds or longitudinal builds)*
 
 ```{r}
 
 #####################
-# Select 2010 HRS Core (LB) Data
+# Load and clean 2010 HRS Core (LBQ) data
+# Run this chunk if you need 2010 (either single-year OR longitudinal)
 #####################
+
+# Navigate to the HRS Core Data folder
+setwd(file.path(path, "h10core"))
+
+# Load 2010 Leave-Behind Questionnaire (LBQ)
+core_2010 <- read.SAScii(
+  "h10da/H10LB_R.da",
+  "h10sas/H10LB_R.sas"
+)
 
 # Add unique identifier (HHID + PN)
 add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
@@ -230,15 +298,37 @@ glimpse(clean_2010)
 
 ```
 
+### Optional: Save 2010-only dataset
+
+```{r}
+# Run this if you're only building 2010 and not doing longitudinal
+
+write.csv(clean_2010, "HRS_Stress_2010.csv", row.names = FALSE)
+saveRDS(clean_2010, "HRS_Stress_2010.rds")
+
+```
+
+
+
 ---
 
-### Select 2012 HRS Core (LB) Data
+### Load and clean 2012 HRS Core (LB) data *(run for 2012 builds or longitudinal builds)*
 
 ```{r}
 
 #####################
-# Select 2012 HRS Core (LB) Data
+# Load and clean 2012 HRS Core (LBQ) data
+# Run this chunk if you need 2012 (either single-year OR longitudinal)
 #####################
+
+# Navigate to the HRS Core Data folder
+setwd(file.path(path, "h12core"))
+
+# Load 2012 Leave-Behind Questionnaire (LBQ)
+core_2012 <- read.SAScii(
+  "h12da/H12LB_R.da",
+  "h12sas/H12LB_R.sas"
+)
 
 # Add unique identifier (HHID + PN)
 add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
@@ -284,15 +374,37 @@ glimpse(clean_2012)
 
 ```
 
+### Optional: Save 2012-only dataset
+
+```{r}
+# Run this if you're only building 2012 and not doing longitudinal
+
+write.csv(clean_2012, "HRS_Stress_2012.csv", row.names = FALSE)
+saveRDS(clean_2012, "HRS_Stress_2012.rds")
+
+```
+
+
+
 ---
 
-### Select 2014 HRS Core (LB) Data
+### Load and clean 2014 HRS Core (LB) data *(run for 2014 builds or longitudinal builds)*
 
 ```{r}
 
 #####################
-# Select 2014 HRS Core (LB) Data
+# Load and clean 2014 HRS Core (LBQ) data
+# Run this chunk if you need 2014 (either single-year OR longitudinal)
 #####################
+
+# Navigate to the HRS Core Data folder
+setwd(file.path(path, "h14core"))
+
+# Load 2014 Leave-Behind Questionnaire (LBQ)
+core_2014 <- read.SAScii(
+  "h14da/H14LB_R.da",
+  "h14sas/H14LB_R.sas"
+)
 
 # Add unique identifier (HHID + PN)
 add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
@@ -324,15 +436,37 @@ glimpse(clean_2014)
 
 ```
 
+### Optional: Save 2014-only dataset
+
+```{r}
+# Run this if you're only building 2014 and not doing longitudinal
+
+write.csv(clean_2014, "HRS_Stress_2014.csv", row.names = FALSE)
+saveRDS(clean_2014, "HRS_Stress_2014.rds")
+
+```
+
+
+
 ---
 
-### Select 2016 HRS Core (LB) Data
+### Load and clean 2016 HRS Core (LB) data *(run for 2016 builds or longitudinal builds)*
 
 ```{r}
 
 #####################
-# Select 2016 HRS Core (LB) Data
+# Load and clean 2016 HRS Core (LBQ) data
+# Run this chunk if you need 2016 (either single-year OR longitudinal)
 #####################
+
+# Navigate to the HRS Core Data folder
+setwd(file.path(path, "h16core"))
+
+# Load 2016 Leave-Behind Questionnaire (LBQ)
+core_2016 <- read.SAScii(
+  "h16da/H16LB_R.da",
+  "h16sas/H16LB_R.sas"
+)
 
 # Add unique identifier (HHID + PN)
 add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
@@ -364,15 +498,37 @@ glimpse(clean_2016)
 
 ```
 
+### Optional: Save 2016-only dataset
+
+```{r}
+# Run this if you're only building 2016 and not doing longitudinal
+
+write.csv(clean_2016, "HRS_Stress_2016.csv", row.names = FALSE)
+saveRDS(clean_2016, "HRS_Stress_2016.rds")
+
+```
+
+
+
 ---
 
-### Select 2018 HRS Core (LB) Data
+### Load and clean 2018 HRS Core (LB) data *(run for 2018 builds or longitudinal builds)*
 
 ```{r}
 
 #####################
-# Select 2018 HRS Core (LB) Data
+# Load and clean 2018 HRS Core (LBQ) data
+# Run this chunk if you need 2018 (either single-year OR longitudinal)
 #####################
+
+# Navigate to the HRS Core Data folder
+setwd(file.path(path, "h18core"))
+
+# Load 2018 Leave-Behind Questionnaire (LBQ)
+core_2018 <- read.SAScii(
+  "h18da/H18LB_R.da",
+  "h18sas/H18LB_R.sas"
+)
 
 # Add unique identifier (HHID + PN)
 add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
@@ -417,15 +573,37 @@ glimpse(clean_2018)
 
 ```
 
+### Optional: Save 2018-only dataset
+
+```{r}
+# Run this if you're only building 2018 and not doing longitudinal
+
+write.csv(clean_2018, "HRS_Stress_2018.csv", row.names = FALSE)
+saveRDS(clean_2018, "HRS_Stress_2018.rds")
+
+```
+
+
+
 ---
 
-### Select 2020 HRS Core (LB) Data
+### Load and clean 2020 HRS Core (LB) data *(run for 2020 builds or longitudinal builds)*
 
 ```{r}
 
 #####################
-# Select 2020 HRS Core (LB) Data
+# Load and clean 2020 HRS Core (LBQ) data
+# Run this chunk if you need 2020 (either single-year OR longitudinal)
 #####################
+
+# Navigate to the HRS Core Data folder
+setwd(file.path(path, "h20core"))
+
+# Load 2020 Leave-Behind Questionnaire (LBQ)
+core_2020 <- read.SAScii(
+  "h20da/H20LB_R.da",
+  "h20sas/H20LB_R.sas"
+)
 
 # Add unique identifier (HHID + PN)
 add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
@@ -485,15 +663,37 @@ glimpse(clean_2020)
 
 ```
 
+### Optional: Save 2020-only dataset
+
+```{r}
+# Run this if you're only building 2020 and not doing longitudinal
+
+write.csv(clean_2020, "HRS_Stress_2020.csv", row.names = FALSE)
+saveRDS(clean_2020, "HRS_Stress_2020.rds")
+
+```
+
+
+
 ---
 
-### Select 2022 HRS Core (LB) Data
+### Load and clean 2022 HRS Core (LB) data *(run for 2022 builds or longitudinal builds)*
 
 ```{r}
 
 #####################
-# Select 2022 HRS Core (LB) Data
+# Load and clean 2022 HRS Core (LBQ) data
+# Run this chunk if you need 2022 (either single-year OR longitudinal)
 #####################
+
+# Navigate to the HRS Core Data folder
+setwd(file.path(path, "h22core"))
+
+# Load 2022 Leave-Behind Questionnaire (LBQ)
+core_2022 <- read.SAScii(
+  "h22da/H22LB_R.da",
+  "h22sas/H22LB_R.sas"
+)
 
 # Add unique identifier (HHID + PN)
 add_id <- function(df) df %>% mutate(unique_id = paste(HHID, PN, sep = "_"))
@@ -553,10 +753,33 @@ glimpse(clean_2022)
 
 ```
 
-
-### Combine 2006-2022 HRS Core (LB) Data
+### Optional: Save 2022-only dataset
 
 ```{r}
+# Run this if you're only building 2022 and not doing longitudinal
+
+write.csv(clean_2022, "HRS_Stress_2022.csv", row.names = FALSE)
+saveRDS(clean_2022, "HRS_Stress_2022.rds")
+
+```
+
+
+
+---
+
+### Combine All Years (Run Only for Longitudinal Build)
+
+```{r}
+
+# NOTE:
+# - This step combines all the yearly "clean_[year]" datasets that you created above.
+# - If you only built certain years (e.g., 2014–2022), remove any years from the
+#   "clean_list" below that you did not load or clean.
+#   Example:
+#     clean_list <- list(clean_2014, clean_2016, clean_2018, clean_2020, clean_2022)
+#
+# The bind_rows() function will automatically align columns and fill in missing
+# variables with NA where necessary.
 
 library(dplyr)
 
@@ -579,18 +802,16 @@ glimpse(full_hrs_stress)
 
 ---
 
-### Save and Export 2006-2022 HRS Core (LB) Data
+### Save and Export Longitudinal Dataset (2006–2022 Only)
 
 
 Export the cleaned dataset for future use in your preferred format. Below are examples using both `write.csv()` and `saveRDS()`: 
 
 ```{r}
 
-# write.csv(full_hrs_stress, "name_your_hrs_stress_dataset.csv")
-# Example: write.csv(full_hrs_stress, "hrs_stress_data.csv")
-
-# saveRDS(full_hrs_stress, "name_your_hrs_stress_dataset.rds")
-# Example: saveRDS(full_hrs_stress, "hrs_stress_data.rds")
+# Save longitudinal dataset (2006–2022)
+write.csv(full_hrs_stress, "HRS_Stress_Longitudinal_2006_2022.csv", row.names = FALSE)
+saveRDS(full_hrs_stress, "HRS_Stress_Longitudinal_2006_2022.rds")
 
 ```
 
@@ -599,25 +820,38 @@ Export the cleaned dataset for future use in your preferred format. Below are ex
 
 ### Optional: Merge your HRS Stress dataset with your main HRS Allostatic (over)Load dataset
 
-If you have already built the HRS Allostatic (over)Load dataset (from HRS/HRS_dataset_construction.Rmd), you can join it with full_hrs_stress on the common key `id_year`.
+If you’ve already built the **HRS Allostatic (over)Load dataset** (from HRS_dataset_construction.Rmd), you can merge it with your **HRS Stress** dataset — whether you built a *single-year* or *longitudinal* version.  
+
+**Instructions:**  
+
+1. Load your Allostatic dataset.  
+2. Choose the appropriate stress dataset object:  
+- `clean_[year]` → for single-year builds (e.g., `clean_2016`)  
+- `full_hrs_stress` → for longitudinal builds (2006–2022)  
+3. Merge using the shared key `id_year`.  
 
 ```{r}
 
 # Load your Allostatic (over)Load dataset
-# (use the matching format you saved earlier)
+# (use the same file format you saved earlier)
 # hrs_al <- readRDS("hrs_allostatic_overload.rds")
 # hrs_al <- read.csv("hrs_allostatic_overload.csv")
 
-# Join stress data with Allostatic (over)Load data on id_year
-hrs_merged <- full_hrs_stress %>%
-  left_join(hrs_al, by = "id_year")
+# ---- For single-year builds ----
+# Replace [year] with your chosen year, e.g., clean_2016
+# hrs_merged <- clean_[year] %>%
+#   left_join(hrs_al, by = "id_year")
+
+# ---- For longitudinal builds ----
+# hrs_merged <- full_hrs_stress %>%
+#   left_join(hrs_al, by = "id_year")
 
 # Preview merged dataset
-glimpse(hrs_merged)
+# glimpse(hrs_merged)
 
 # Save/export merged dataset
-# write.csv(hrs_merged, "hrs_allostatic_plus_stress.csv", row.names = FALSE)
-# saveRDS(hrs_merged, "hrs_allostatic_plus_stress.rds")
+# write.csv(hrs_merged, "HRS_Allostatic_Plus_Stress.csv", row.names = FALSE)
+# saveRDS(hrs_merged, "HRS_Allostatic_Plus_Stress.rds")
 
 ```
 
